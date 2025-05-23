@@ -1,0 +1,56 @@
+import Hapi from "@hapi/hapi";
+import dotenv from "dotenv";
+import { AppDataSource } from "./config/dataSource.js";
+import userRoutes from "./routes/UserRoute.js";
+import skillRoutes from "./routes/SkillRoute.js";
+import guideRoutes from "./routes/skillUpgradeGuideRoute.js";
+import requestRoutes from "./routes/SkillUpdateRequestRoute.js";
+
+dotenv.config();
+
+const init = async () => {
+  await AppDataSource.initialize();
+  console.log("Database connected");
+
+  const server = Hapi.server({
+    port: process.env.PORT || 3000,
+    host: "localhost",
+  });
+
+  await server.register({
+    plugin: userRoutes,
+    options: {},
+    routes: {
+      prefix: "/api/users",
+    },
+  });
+
+  await server.register({
+    plugin: guideRoutes,
+    options: {},
+    routes: {
+      prefix: "/api/guides",
+    },
+  });
+
+  await server.register({
+    plugin: skillRoutes,
+    options: {},
+    routes: {
+      prefix: "/api/skills",
+    },
+  });
+
+  await server.register({
+    plugin: requestRoutes,
+    options: {},
+    routes: {
+      prefix: "/api/requests",
+    },
+  });
+
+  await server.start();
+  console.log(`Server running on ${server.info.uri}`);
+};
+
+init();
