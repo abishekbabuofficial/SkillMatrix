@@ -13,13 +13,15 @@ const UserService = {
 
   getAllUsers: async (filter = {}) => {
     const where = {};
+    console.log(filter);
+    
     
     if (filter.role) where.role = filter.role;
     if (filter.position) where.position = filter.position;
     if (filter.teamName) where.teamName = filter.teamName;
 
     return await userRepo.find({ where });
-  },
+  }, 
 
   // Hr CRUD Operations
   createUser: async (data) => {

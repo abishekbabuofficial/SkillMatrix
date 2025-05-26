@@ -25,14 +25,16 @@ const SkillUpdateRequestService = {
   getRequestById: async (id) => {
     return await requestRepo.findOneBy({ id });
   },
-  getRequest: async (userId = null) => {
-    if (userId) {
-      // get by id
-      return await requestRepo.findBy({ where: { userId: { userId } } });
-    } else {
-      // get all requests
-      return await requestRepo.find();
-    }
+  getRequestForUser: async (userId) => {
+      const user = await requestRepo.findBy({ where: { userId: { userId } } });
+      if(!user){
+        throw new Error("No requests found")
+      }
+      return user;
+  },
+
+  getAllRequests: async () => {
+    return await requestRepo.find();
   },
   cancelRequest: async (id) => {
     return await requestRepo.delete(id);

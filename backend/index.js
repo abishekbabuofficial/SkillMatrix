@@ -5,6 +5,8 @@ import userRoutes from "./routes/UserRoute.js";
 import skillRoutes from "./routes/SkillRoute.js";
 import guideRoutes from "./routes/skillUpgradeGuideRoute.js";
 import requestRoutes from "./routes/SkillUpdateRequestRoute.js";
+import Jwt from "@hapi/jwt";
+import authRoutes from "./routes/AuthRoute.js";
 
 dotenv.config();
 
@@ -17,6 +19,28 @@ const init = async () => {
     host: "localhost",
   });
 
+  await server.register(Jwt);
+
+  
+  server.auth.strategy("jwt", "jwt", {
+    keys: process.env.JWT_SECRET_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      nbf: true,
+      exp: true,
+    },
+    validate: async (artifacts, request, h) => {
+      return {
+        isValid: true,
+        credentials: { user: artifacts.decoded.payload },
+      };
+    },
+  });
+  
+  server.auth.default("jwt");
+  
   await server.register({
     plugin: userRoutes,
     options: {},
@@ -24,7 +48,7 @@ const init = async () => {
       prefix: "/api/users",
     },
   });
-
+  
   await server.register({
     plugin: guideRoutes,
     options: {},
@@ -46,6 +70,13 @@ const init = async () => {
     options: {},
     routes: {
       prefix: "/api/requests",
+    },
+  });
+  await server.register({
+    plugin: authRoutes,
+    options: {},
+    routes: {
+      prefix: "/api/auth",
     },
   });
 

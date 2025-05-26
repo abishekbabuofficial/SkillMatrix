@@ -1,23 +1,29 @@
 import SkillUpdateRequestService from '../services/SkillUpdateRequestService.js';
 import { AppDataSource } from '../config/dataSource.js';
-import { User } from '../entities/User.js';
+import { role, User } from '../entities/User.js';
 
 const userRepo = AppDataSource.getRepository(User);
 
 const SkillUpdateRequestController = {
   createRequest: async (req, h) => {
     try {
-      const { userId, skillScore } = req.payload;
+      const userId = req.auth.credentials.user.id;
+      const { skillScore } = req.payload;
 
       const user = await userRepo.findOneBy({ id: userId });
       if (!user) return h.response({ error: 'User not found' }).code(404);
 
       const reviewChain = [];
-      if (user.leadId) reviewChain.push(user.leadId);
-      if (user.hrId) reviewChain.push(user.hrId);
+      let id = user.id;
+      while(id){
+        const record = await userRepo.findOneBy({ id: id });
+        if (record.leadId) reviewChain.push(user.leadId);
+        id = record.leadId? record.leadId : null;
+      }
+      if (user.hrId && user.leadId) reviewChain.push(user.hrId);
 
       const request = await SkillUpdateRequestService.createRequest(skillScore, userId, reviewChain, reviewChain[0]);
-      return h.response(request).code(201);
+      return h.response(`Request created successfully and forwarded to ${request.currentReviewer}`).code(201);
     } catch (err) {
       return h.response({ error: err.message }).code(500);
     }
@@ -33,9 +39,19 @@ const SkillUpdateRequestController = {
     }
   },
 
-  getRequest: async (req, h) => {
+  getRequestForUser: async (req, h) => {
     try {
-      const requests = await SkillUpdateRequestService.getRequest(req.query.userId);
+      const userId  = req.auth.credentials.user.id;
+      const requests = await SkillUpdateRequestService.getRequestForUser(userId);
+      return h.response(requests).code(200);
+    } catch (err) {
+      return h.response({ error: err.message }).code(500);
+    }
+  },
+
+  getAllRequests: async (req, h) => {
+    try {
+      const requests = await SkillUpdateRequestService.getAllRequests();
       return h.response(requests).code(200);
     } catch (err) {
       return h.response({ error: err.message }).code(500);
@@ -44,7 +60,7 @@ const SkillUpdateRequestController = {
 
   getPendingRequests: async (req, h) => {
     try {
-      const reviewerId = req.params.id;
+      const reviewerId = req.auth.credentials.user.id;
       if (!reviewerId) return h.response({ error: "Missing reviewerId" }).code(400);
       const requests = await SkillUpdateRequestService.getPendingRequests(reviewerId);
       return h.response(requests).code(200);
@@ -64,7 +80,8 @@ const SkillUpdateRequestController = {
 
   updateRequestStatus: async (req, h) => {
     try {
-      const { status, reviewedBy, editedSkillScore, comments } = req.payload;
+      const reviewedBy = req.auth.credentials.user.id;
+      const { status, editedSkillScore, comments } = req.payload;
       const updated = await SkillUpdateRequestService.updateRequestStatus(
         req.params.id,
         status,
@@ -72,7 +89,9 @@ const SkillUpdateRequestController = {
         editedSkillScore,
         comments
       );
-      return h.response(updated).code(200);
+      if(status==="Forwarded"){
+        return h.response("Updated successfully and forwarded to "+updated.currentReviewer+" " + updated).code(200);
+      }else {return h.response("Fully Approved" + updated).code(200) ;}
     } catch (err) {
       return h.response({ error: err.message }).code(400);
     }

@@ -3,7 +3,8 @@ import UserService from "../services/UserService.js";
 const UserController = {
   getUserById: async (req, h) => {
     try {
-      const user = await UserService.getUserById(req.params.id);
+      const userId = req.auth.credentials.user.id;
+      const user = await UserService.getUserById(userId);
       return h.response(user).code(200);
     } catch (err) {
       return h.response({ error: err.message }).code(404);
@@ -18,7 +19,6 @@ const UserController = {
       return h.response({ error: err.message }).code(500);
     }
   },
-
   createUser: async (req, h) => {
     try {
       const data = req.payload;
