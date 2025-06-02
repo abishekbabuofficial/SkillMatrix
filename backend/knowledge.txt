@@ -1,1 +1,10 @@
 => need to split the filtered api services
+
+// skill name change
+// cascade skills in users table
+// if any employee is assigned to any other emp as a lead. The employee's role should be changed to lead
+// skill matrix team (if multi lead we need to fetch for all below employees)
+
+
+// should not there be reject
+// isInitiate for Hr

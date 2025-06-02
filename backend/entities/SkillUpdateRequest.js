@@ -15,6 +15,7 @@ export const SkillUpdateRequest = new EntitySchema({
     },
     skillScore: {
       type: "json",
+      nullable: true,
     },
     editedSkillScore: {
       type: "json",

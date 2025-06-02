@@ -7,30 +7,63 @@ const requestRepo = AppDataSource.getRepository(SkillUpdateRequest);
 const userRepo = AppDataSource.getRepository(User);
 
 const SkillUpdateRequestService = {
-  createRequest: async (skillScore, userId,reviewChain, currentReviewer) => {
+  createRequest: async (
+    skillScore,
+    userId,
+    reviewHistory,
+    editedSkillScore = null,
+    reviewChain,
+    currentReviewer
+  ) => {
+    // Validate userId is provided
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+
     await AppDataSource.query(`
   SELECT setval(
     pg_get_serial_sequence('skill_update_requests', 'id'),
-    (SELECT COALESCE(MAX(id), 0) FROM skill_update_requests)
+    GREATEST((SELECT COALESCE(MAX(id), 0) FROM skill_update_requests), 1)
   )
 `);
+
+    // Check if a request already exists for this user
+    const existingRequest = await requestRepo.findOneBy({ userId });
+
+    if (existingRequest) {
+      // Update existing request
+      existingRequest.skillScore = skillScore;
+
+      // Update other fields if provided
+      if (editedSkillScore) existingRequest.editedSkillScore = editedSkillScore;
+      if (reviewChain) existingRequest.reviewChain = reviewChain;
+      if (currentReviewer) existingRequest.currentReviewer = currentReviewer;
+      if (reviewHistory) existingRequest.reviewHistory.push(reviewHistory);
+
+      return await requestRepo.save(existingRequest);
+    }
+
+    // Create new request
     const skillRequest = requestRepo.create({
       skillScore,
       userId,
       reviewChain,
       currentReviewer,
+      editedSkillScore,
+      reviewHistory,
     });
+
     return await requestRepo.save(skillRequest);
   },
   getRequestById: async (id) => {
     return await requestRepo.findOneBy({ id });
   },
   getRequestForUser: async (userId) => {
-      const user = await requestRepo.findBy({ where: { userId: { userId } } });
-      if(!user){
-        throw new Error("No requests found")
-      }
-      return user;
+    const requests = await requestRepo.findBy({ userId });
+    if (!requests || requests.length === 0) {
+      throw new Error("No requests found");
+    }
+    return requests;
   },
 
   getAllRequests: async () => {
@@ -40,15 +73,15 @@ const SkillUpdateRequestService = {
     return await requestRepo.delete(id);
   },
   getPendingRequests: async (reviewerId) => {
-  return await requestRepo.find({
-    where: {
-      currentReviewer: reviewerId,
-      status: In(["Pending", "Forwarded"])
-    },
-    relations: ["user"],
-    order: { requestedAt: "DESC" }
-  });
-},
+    return await requestRepo.find({
+      where: {
+        currentReviewer: reviewerId,
+        status: In(["Pending", "Forwarded"]),
+      },
+      relations: ["user"],
+      order: { requestedAt: "DESC" },
+    });
+  },
   updateRequestStatus: async (
     id,
     status,

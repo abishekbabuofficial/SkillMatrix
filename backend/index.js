@@ -7,8 +7,10 @@ import guideRoutes from "./routes/skillUpgradeGuideRoute.js";
 import requestRoutes from "./routes/SkillUpdateRequestRoute.js";
 import Jwt from "@hapi/jwt";
 import authRoutes from "./routes/AuthRoute.js";
+import cors from 'cors';
 
 dotenv.config();
+
 
 const init = async () => {
   await AppDataSource.initialize();
@@ -17,6 +19,11 @@ const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT || 3000,
     host: "localhost",
+    routes: {
+    cors: {
+      origin: ['http://localhost:8080'], 
+    }
+  }
   });
 
   await server.register(Jwt);

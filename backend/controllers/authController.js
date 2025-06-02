@@ -32,6 +32,7 @@ const AuthController = {
       },
       { key: process.env.JWT_SECRET_KEY, algorithm: 'HS256' }
     );
+    
 
     return h.response({ token }).code(200);
     } catch (error) {
