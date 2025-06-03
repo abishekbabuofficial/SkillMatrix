@@ -1,4 +1,4 @@
-import {EntitySchema} from "typeorm";
+import { EntitySchema } from "typeorm";
 
 export const Skill = new EntitySchema({
   name: "Skill",
@@ -13,8 +13,20 @@ export const Skill = new EntitySchema({
       type: "varchar",
       unique: true,
     },
-    description: {
-      type: "json",
+    low: {
+      type: "text",
+      nullable: true,
+    },
+    medium: {
+      type: "text",
+      nullable: true,
+    },
+    average: {
+      type: "text",
+      nullable: true,
+    },
+    high: {
+      type: "text",
       nullable: true,
     },
     createdAt: {
@@ -25,11 +37,11 @@ export const Skill = new EntitySchema({
       type: "varchar",
       nullable: true,
     },
-    position:{
-      type: "varchar",
-      array:true,
+    position: {
+      type: "int",
+      array: true,
       nullable: true,
-    }
+    },
   },
   relations: {
     upgradeGuides: {
@@ -37,5 +49,10 @@ export const Skill = new EntitySchema({
       type: "one-to-many",
       inverseSide: "skill",
     },
+    assessmentRequest: {
+      target: "AssessmentRequest",
+      type: "one-to-many",
+      inverseSide: "skill",
+    }
   },
 });

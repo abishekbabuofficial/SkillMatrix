@@ -24,6 +24,12 @@ const skillRoutes = {
         handler: SkillController.createSkill,
       },
       {
+        method: "POST",
+        path: "/update",
+        options: authorizeRoles([role.HR]),
+        handler: SkillController.updateSkill,
+      },
+      {
         method: "DELETE",
         path: "/delete/{id}",
         options: authorizeRoles([role.HR]),
@@ -31,9 +37,13 @@ const skillRoutes = {
       },
       {
         method: "GET",
-        path: "/position/{position}",
-        options: authorizeRoles([role.LEAD, role.HR]),
+        path: "/position",
         handler: SkillController.getSkillByPosition,
+      },
+      {
+        method: "GET",
+        path: "/guide",
+        handler: SkillController.getSkillsWithUpgradeGuides,
       },
     ]);
   },

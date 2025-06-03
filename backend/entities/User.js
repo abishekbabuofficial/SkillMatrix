@@ -25,61 +25,106 @@ export const User = new EntitySchema({
   columns: {
     id: {
       primary: true,
+      type: "int",
+      generated: true,
+    },
+    userId: {
       type: "varchar",
+      unique:true,
     },
     name: {
       type: "varchar",
     },
     email: {
       type: "varchar",
-      unique: true,
+      unique:true
     },
-    passwordHash: {
-      type: "varchar",
-      nullable: true, 
-      select: false,
-    },
-    role: {
-      type: "enum",
-      enum: Object.values(role),
-    },
-    position: {
-      type: "enum",
-      enum: Object.values(position),
+    roleId: {
+      type: "integer",
+      name: "role_id",
       nullable: true,
     },
-    teamName: {
-      type: "enum",
-      enum: Object.values(teamName),
+    teamId: {
+      type: "integer",
+      name: "team_id",
+      nullable: true,
+    },
+    positionId: {
+      type: "integer",
+      name: "position_id",
       nullable: true,
     },
     leadId: {
-      type: "varchar",
+      type: "integer",
       nullable: true,
+      name: "lead_id",
     },
     hrId: {
-      type: "varchar",
+      type: "integer",
       nullable: true,
+      name: "hr_id",
     },
     createdAt: {
       type: "timestamp",
       createDate: true,
     },
-    skills: {
-      type: "json",
-      nullable: true,
-    },
-    updatedAt: {
-      type: "timestamp",
-      updateDate: true,
-    }
   },
   relations: {
-    updateRequests: {
-      target: "SkillUpdateRequest",
-      type: "one-to-many",
-      inverseSide: "user",
+    leadId: {
+      target: "User",
+      type: "many-to-one",
+      joinColumn: {
+        name: "lead_id",
+        referencedColumnName: "id"
+      }
     },
+    hrId: {
+      target: "User",
+      type: "many-to-one",
+      joinColumn: {
+        name: "hr_id",
+        referencedColumnName: "id"
+      }
+    },
+    Requests: {
+      target: "AssessmentRequest",
+      type: "one-to-many",
+      inverseSide: "User",
+    },
+    auth:{
+      target:"Auth",
+      type:'one-to-one',
+      inverseSide:'User'
+    },
+    role:{
+      target:"Role",
+      type:'many-to-one',
+      joinColumn: {
+        name: "role_id",
+        referencedColumnName: "id"
+      }
+    },
+    position:{
+      target:"Position",
+      type:'many-to-one',
+      joinColumn: {
+        name: "position_id",
+        referencedColumnName: "id"
+      }
+    },
+    Team:{
+      target:"Team",
+      type:'many-to-one',
+      joinColumn: {
+        name: "team_id",
+        referencedColumnName: "id"
+      }
+    },
+    Audit:{
+      target:"Audit",
+      type:'one-to-many',
+      inverseSide:'User',
+    }
   },
 });
     

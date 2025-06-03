@@ -6,6 +6,7 @@ const authorizeRoles = (allowedRoles) => {
       {
         method: (req, h) => {
           const user = req.auth.credentials.user;
+          console.log(user.role)
           if (!user || !allowedRoles.includes(user.role)) {
             
             throw Boom.forbidden("Access Denied: Unauthorized access or insufficient permissions.")

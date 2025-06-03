@@ -1,4 +1,6 @@
 import SkillService from '../services/SkillService.js';
+import UserService from '../services/UserService.js';
+import UserController from './UserController.js';
 
 const SkillController = {
   createSkill: async (req, h) => {
@@ -6,11 +8,29 @@ const SkillController = {
         if(!req.payload.name || !req.payload.position){
             throw new Error('Name and position are required');
         }
-      const createdSkill = await SkillService.createSkill(req.payload);
+      const SkillData = {
+          name: req.payload.name,
+          low: req.payload.low,
+          medium: req.payload.medium,
+          average: req.payload.average,
+          high: req.payload.high,
+          createdBy:req.auth.credentials.user.id,
+          position:req.payload.position
+      }
+      const createdSkill = await SkillService.createSkill(SkillData);
       return h.response(`Skill ${createdSkill.name} created successfully!`).code(201);
     } catch (err) {
       return h.response({ error: err.message }).code(400);
     }
+  },
+
+  updateSkill: async (req, h) => {
+try {
+  const updatedSkill = await SkillService.updateSkill(req.payload);
+  return h.response("Skill Updated Successfully!").code(200);
+} catch (error) {
+  return h.response({ error: error.message }).code(400);
+}
   },
 
   deleteSkillById: async (req, h) => {
@@ -43,10 +63,21 @@ const SkillController = {
 
   getSkillByPosition: async (req, h) => {
     try {
-      const skill = await SkillService.getSkillByPosition(req.params.position);
+      const userId = req.auth.credentials.user.id;
+      const user = await UserService.getUserById(userId);
+      const skill = await SkillService.getSkillByPosition(user.positionId);
       return h.response(skill).code(200);
     } catch (err) {
       return h.response({ error: err.message }).code(404);
+    }
+  },
+  getSkillsWithUpgradeGuides: async (req, h) => {
+    try {
+      const skills = await SkillService.getSkillsWithUpgradeGuides();
+      return h.response(skills).code(200);
+    } catch (err) {
+      console.error(err);
+      return h.response({ error: err.message }).code(500);
     }
   }
 };

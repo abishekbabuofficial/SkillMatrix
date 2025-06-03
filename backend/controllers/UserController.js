@@ -22,7 +22,7 @@ const UserController = {
   createUser: async (req, h) => {
     try {
       const data = req.payload;
-      if(!data.id || !data.name){
+      if(!data.userId || !data.name){
         return h.response({error:"Missing required fields ID and Name"}).code(400);
       }
       const created = await UserService.createUser(data);

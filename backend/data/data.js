@@ -1,8 +1,5 @@
 (
-    
-
-
-    [{'id': 'LMT20305',
+  [{'id': 'LMT20305',
    'name': 'Murugan',
    'email': 'murugan@lumel.com',
    'role': 'Lead',
