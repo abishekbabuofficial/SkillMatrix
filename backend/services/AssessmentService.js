@@ -4,20 +4,25 @@ import { AssessmentRequest } from "../entities/AssessmentRequest.js";
 import { Score } from "../entities/Score.js";
 import { User } from "../entities/User.js";
 import { Skill } from "../entities/Skill.js";
-import skill from "../data/skill.js";
+import { Audit } from "../entities/Audit.js";
 
 const assessmentRequestRepo = AppDataSource.getRepository(AssessmentRequest);
 const scoreRepo = AppDataSource.getRepository(Score);
 const userRepo = AppDataSource.getRepository(User);
 const skillRepo = AppDataSource.getRepository(Skill);
+const auditRepo = AppDataSource.getRepository(Audit);
 
 const AssessmentService = {
-  createAssessment: async (userId, skillAssessments = [], createdBy = null) => {
+  createAssessment: async (userId, comments = "", skillAssessments = [], createdBy) => {
     try {
       // Validate user exists
       const user = await userRepo.findOneBy({ id: userId });
       if (!user) {
         throw new Error("User not found");
+      }
+
+      if(createdBy !== user.id && createdBy !== user.leadId ){
+        throw new Error("Unauthorized to create assessment");
       }
 
       if(skillAssessments.length===0){
@@ -63,7 +68,14 @@ const AssessmentService = {
           createdBy
         );
       }
-
+      if(savedAssessment){
+        await auditRepo.save({
+          assessmentId: savedAssessment.id,
+          auditType: "Create",
+          editorId: createdBy,
+          comments: comments,
+        })
+      }
       return await AssessmentService.getAssessmentById(savedAssessment.id);
     } catch (error) {
       throw new Error(`Failed to create assessment: ${error.message}`);
@@ -279,10 +291,10 @@ const AssessmentService = {
           });
 
           if (score) {
-            if (scoreUpdate.leadScore < 1 || scoreUpdate.leadScore > 5) {
-              throw new Error(`Invalid lead score. Must be between 1 and 5`);
+            if (scoreUpdate.leadScore < 1 || scoreUpdate.leadScore > 4) {
+              throw new Error(`Invalid lead score. Must be between 1 and 4`);
             }
-            score.leadScore = scoreUpdate.leadScore;
+            score.leadScore = scoreUpdate.score;
             await scoreRepo.save(score);
           }
         }
@@ -310,7 +322,13 @@ const AssessmentService = {
       if(currentUserId === hrId){
         assessment.nextApprover = null;
       }
-      return await assessmentRequestRepo.save(assessment);
+      const reviewed = await assessmentRequestRepo.save(assessment);
+      await auditRepo.save({
+        assessmentId: reviewed.id,
+        auditType: "Review",
+        editorId: currentUserId,
+        comments: reviewData.comments,
+      });
     } catch (error) {
       throw new Error(`Failed to review assessment: ${error.message}`);
     }

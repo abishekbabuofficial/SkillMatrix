@@ -215,6 +215,7 @@ const UserService = {
         where: {
           teamId: team.id,
         },
+        select: ["id","userId","name"],
         relations: ["role", "position", "Team"],
       });
 
@@ -241,6 +242,7 @@ const UserService = {
   getFullSkillMatrix: async () => {
     try {
       const users = await userRepo.find({
+        select: ["id","userId","name"],
         relations: ["role", "position", "Team"],
       });
 

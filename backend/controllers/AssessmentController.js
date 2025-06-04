@@ -7,10 +7,12 @@ const AssessmentController = {
     try {
       const { skillAssessments } = req.payload;
       const userId = req.payload.userId;
+      const comments = req.payload.comments;
       const createdBy = req.auth.credentials.user.id || null;
 
       const assessment = await AssessmentService.createAssessment(
         userId,
+        comments,
         skillAssessments,
         createdBy
       );
@@ -24,29 +26,13 @@ const AssessmentController = {
         .code(201);
     } catch (error) {
       console.error("Error creating assessment:", error);
-      if (error.message.includes("already has a pending assessment")) {
         return h
           .response({
             success: false,
             error: error.message,
           })
           .code(409);
-      }
-      if (error.message.includes("not found")) {
-        return h
-          .response({
-            success: false,
-            error: error.message,
-          })
-          .code(404);
-      }
-      return h
-        .response({
-          success: false,
-          error: "Failed to create assessment",
-        })
-        .code(500);
-    }
+        }
   },
 
   // Get assessment by ID
