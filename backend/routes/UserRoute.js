@@ -47,6 +47,17 @@ const userRoutes = {
         options: authorizeRoles([role.HR]),
         handler: UserController.getFullMatrix,
       },
+      {
+        method: "GET",
+        path: "/details",
+        handler: UserController.getAllDetails,
+      },
+      {
+        method: "GET",
+        path: "/teams/{teamId}",
+        options: authorizeRoles([role.LEAD, role.HR]),
+        handler: UserController.getTeamMemebers,
+      },
     ]);
   },
 };

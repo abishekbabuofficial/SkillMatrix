@@ -34,14 +34,16 @@ export const Audit = new EntitySchema({
       type: "many-to-one",
       joinColumn:{
         name:"editorId"
-      }
+      },
+      onDelete: "CASCADE",
     },
     assessmentRequest: {
       target: "AssessmentRequest",
       type: "many-to-one",
       joinColumn:{
         name:"assessmentId"
-      }
+      },
+      onDelete: "CASCADE",
     }
   },
 });

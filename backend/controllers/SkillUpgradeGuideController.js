@@ -17,8 +17,10 @@ const SkillUpgradeGuideController = {
         if (!req.payload.skillId || !req.payload.fromLevel || !req.payload.toLevel)
         return h.response({error: 'Skill Id, fromLevel and toLevel are required'}).code(400);
       const newGuide = await SkillUpgradeGuideService.createGuide(req.payload);
-      return h.response("New Guide Created successfully!").code(201);
+      return h.response({success: true, message:"New Guide Created successfully!"}).code(201);
     } catch (err) {
+      console.log('hit error',err);
+      
       return h.response({ error: err.message }).code(400);
     }
   },

@@ -27,7 +27,7 @@ const UserController = {
       }
       const created = await UserService.createUser(data);
       
-      return h.response("User Added successfully!").code(201);
+      return h.response({message: "User Added successfully!"}).code(201);
     } catch (err) {
       return h.response({ error: err.message }).code(400);
     }
@@ -36,7 +36,7 @@ const UserController = {
   updateUser: async (req, h) => {
     try {
       const updated = await UserService.updateUser(req.payload);
-      return h.response("Updated successfully!").code(200);
+      return h.response({message: "Updated successfully!"}).code(200);
     } catch (err) {
       return h.response({ error: err.message }).code(404);
     }
@@ -45,9 +45,22 @@ const UserController = {
   deleteUser: async (req, h) => {
     try {
       const deleted = await UserService.deleteUser(req.params.id);
-      return h.response("Successfully Deleted user with ID " + req.params.id + "!").code(200);
+      return h.response({message:"Successfully Deleted user with ID " + req.params.id + "!"}).code(200);
     } catch (err) {
       return h.response({ error: err.message }).code(404);
+    }
+  },
+
+  getTeamMemebers: async (req, h) => {
+    try {
+      const teamId = req.params.teamId;
+      if (!teamId) {
+        return h.response({ error: "Team ID is required" }).code(400);
+      }
+      const members = await UserService.getTeamMembers(teamId);
+      return h.response(members).code(200);
+    } catch (err) {
+      return h.response({ error: err.message }).code(500);
     }
   },
 
@@ -67,7 +80,36 @@ const UserController = {
     } catch (err) {
       return h.response({ error: err.message }).code(500);
     }
-  }
+  },
+
+  getAllDetails: async (req, h) => {
+    try {
+      const type = req.query.type || "all";
+      let data;
+      
+      switch (type) {
+        case "all":
+          const positions = await UserService.getAllPositions();
+          const roles = await UserService.getAllRoles();
+          const teams = await UserService.getAllTeams();
+          return h.response({ positions, roles, teams }).code(200);
+        case "position":
+           data = await UserService.getAllPositions();
+          break;
+        case "role":
+          data = await UserService.getAllRoles();
+          break;
+        case "team":
+          data = await UserService.getAllTeams();
+          break;
+        default:
+          return h.response({ error: "Invalid type parameter" }).code(400);
+      }
+      return h.response(data).code(200);
+    } catch (err) {
+      return h.response({ error: err.message }).code(500);
+    }
+  },
 };
 
 export default UserController;

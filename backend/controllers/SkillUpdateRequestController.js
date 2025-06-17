@@ -1,4 +1,4 @@
-import SkillUpdateRequestService from "../services/SkillUpdateRequestService.js";
+import SkillUpdateRequestService from "../services/";
 import { AppDataSource } from "../config/dataSource.js";
 import { role, User } from "../entities/User.js";
 

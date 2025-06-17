@@ -48,6 +48,7 @@ export const AssessmentRequest = new EntitySchema({
       target: "Audit",
       type: "one-to-many",
       inverseSide: "AssessmentRequest",
+      onDelete: "CASCADE",
     }
   },
 });

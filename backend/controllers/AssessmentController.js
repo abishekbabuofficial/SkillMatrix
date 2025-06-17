@@ -8,13 +8,11 @@ const AssessmentController = {
       const { skillAssessments } = req.payload;
       const userId = req.payload.userId;
       const comments = req.payload.comments;
-      const createdBy = req.auth.credentials.user.id || null;
 
       const assessment = await AssessmentService.createAssessment(
         userId,
         comments,
         skillAssessments,
-        createdBy
       );
 
       return h
@@ -292,10 +290,13 @@ const AssessmentController = {
   // Get user's latest approved scores
   getUserLatestApprovedScores: async (req, h) => {
     try {
-      const userId = req.auth.credentials.id;
+      const userId = req.auth.credentials.user.id;
       const scores = await AssessmentService.getUserLatestApprovedScores(
         userId
       );
+      // if(!scores || scores.length === 0) {
+      //   throw new Error("No approved scores found for this user");
+      // }
 
       return h
         .response({
@@ -305,7 +306,6 @@ const AssessmentController = {
         .code(200);
     } catch (error) {
       console.error("Error getting user's latest approved scores:", error);
-      if (error.message.includes("not found")) {
         return h
           .response({
             success: false,
@@ -313,15 +313,32 @@ const AssessmentController = {
           })
           .code(404);
       }
-      return h
-        .response({
-          success: false,
-          error: "Failed to retrieve latest approved scores",
-        })
-        .code(500);
-    }
   },
 
+  // Get user's latest approved scores by user ID
+  getUserLatestApprovedScoresByUserId: async (req, h) => {
+    try {
+      const { userId } = req.params;
+      const scores = await AssessmentService.getUserLatestApprovedScores(
+        parseInt(userId)
+      );
+
+      return h
+        .response({
+          success: true,
+          data: scores,
+        })
+        .code(200);
+    } catch (error) {
+      console.error("Error getting user's latest approved scores by ID:", error);
+        return h
+          .response({
+            success: false,
+            error: error.message,
+          })
+          .code(404);
+      }
+  },
 
   // Get assessments assigned to current reviewer
   getMyAssignedAssessments: async (req, h) => {

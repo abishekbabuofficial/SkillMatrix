@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { AppDataSource } from "./config/dataSource.js";
 import userRoutes from "./routes/UserRoute.js";
 import skillRoutes from "./routes/SkillRoute.js";
-// import guideRoutes from "./routes/skillUpgradeGuideRoute.js";
+import guideRoutes from "./routes/skillUpgradeGuideRoute.js";
 // import requestRoutes from "./routes/SkillUpdateRequestRoute.js";
 import Jwt from "@hapi/jwt";
 import authRoutes from "./routes/AuthRoute.js";
@@ -15,7 +15,6 @@ dotenv.config();
 // to seed initial data use this function
 // await seedInitialData();
 
-
 const init = async () => {
   await AppDataSource.initialize();
   console.log("Database connected");
@@ -24,15 +23,15 @@ const init = async () => {
     port: process.env.PORT || 3000,
     host: "localhost",
     routes: {
-    cors: {
-      origin: ['http://localhost:8080'], 
-    }
-  }
+      cors: {
+        origin: ["*"],
+        credentials: true,
+      },
+    },
   });
 
   await server.register(Jwt);
 
-  
   server.auth.strategy("jwt", "jwt", {
     keys: process.env.JWT_SECRET_KEY,
     verify: {
@@ -49,9 +48,9 @@ const init = async () => {
       };
     },
   });
-  
+
   server.auth.default("jwt");
-  
+
   await server.register({
     plugin: userRoutes,
     options: {},
@@ -59,14 +58,14 @@ const init = async () => {
       prefix: "/api/users",
     },
   });
-  
-  // await server.register({
-  //   plugin: guideRoutes,
-  //   options: {},
-  //   routes: {
-  //     prefix: "/api/guides",
-  //   },
-  // });
+
+  await server.register({
+    plugin: guideRoutes,
+    options: {},
+    routes: {
+      prefix: "/api/guides",
+    },
+  });
 
   await server.register({
     plugin: skillRoutes,
@@ -76,7 +75,7 @@ const init = async () => {
     },
   });
 
-    await server.register({
+  await server.register({
     plugin: assessmentRoutes,
     options: {},
     routes: {
@@ -91,6 +90,7 @@ const init = async () => {
   //     prefix: "/api/requests",
   //   },
   // });
+
   await server.register({
     plugin: authRoutes,
     options: {},

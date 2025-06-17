@@ -13,7 +13,12 @@ const skillRepo = AppDataSource.getRepository(Skill);
 const auditRepo = AppDataSource.getRepository(Audit);
 
 const AssessmentService = {
-  createAssessment: async (userId, comments = "", skillAssessments = [], createdBy) => {
+  createAssessment: async (
+    userId,
+    comments = "",
+    skillAssessments = []
+    // createdBy
+  ) => {
     try {
       // Validate user exists
       const user = await userRepo.findOneBy({ id: userId });
@@ -21,21 +26,21 @@ const AssessmentService = {
         throw new Error("User not found");
       }
 
-      if(createdBy !== user.id && createdBy !== user.leadId ){
-        throw new Error("Unauthorized to create assessment");
-      }
+      // if (createdBy !== user.id && createdBy !== user.leadId) {
+      //   throw new Error("Unauthorized to create assessment");
+      // }
 
-      if(skillAssessments.length===0){
+      if (skillAssessments.length === 0) {
         throw new Error("No skill assessments provided");
       }
       // If createdBy is provided, validate that user exists
-      let creator = null;
-      if (createdBy) {
-        creator = await userRepo.findOneBy({ id: createdBy });
-        if (!creator) {
-          throw new Error("Creator user not found");
-        }
-      }
+      // let creator = null;
+      // if (createdBy) {
+      //   creator = await userRepo.findOneBy({ id: createdBy });
+      //   if (!creator) {
+      //     throw new Error("Creator user not found");
+      //   }
+      // }
 
       // Check for existing pending assessments
       const existingAssessment = await assessmentRequestRepo.findOne({
@@ -47,14 +52,13 @@ const AssessmentService = {
 
       let savedAssessment;
       if (existingAssessment) {
-        // throw new Error("User already has a pending assessment");
-        savedAssessment = existingAssessment;
+        throw new Error("User already has a pending assessment");
+        // savedAssessment = existingAssessment;
       } else {
-
         // Create assessment request
         const assessment = assessmentRequestRepo.create({
           userId: userId,
-          nextApprover: user.leadId,
+          nextApprover: user.leadId || user.hrId,
         });
         savedAssessment = await assessmentRequestRepo.save(assessment);
       }
@@ -64,17 +68,17 @@ const AssessmentService = {
         await AssessmentService.addSkillScores(
           savedAssessment.id,
           skillAssessments,
-          userId,
-          createdBy
+          userId
+          // createdBy
         );
       }
-      if(savedAssessment){
+      if (savedAssessment) {
         await auditRepo.save({
           assessmentId: savedAssessment.id,
           auditType: "Create",
-          editorId: createdBy,
+          editorId: userId,
           comments: comments,
-        })
+        });
       }
       return await AssessmentService.getAssessmentById(savedAssessment.id);
     } catch (error) {
@@ -85,8 +89,8 @@ const AssessmentService = {
   addSkillScores: async (
     assessmentId,
     skillAssessments,
-    userId,
-    createdBy = null
+    userId
+    // createdBy = null
   ) => {
     try {
       const assessment = await assessmentRequestRepo.findOneBy({
@@ -95,6 +99,8 @@ const AssessmentService = {
       if (!assessment) {
         throw new Error("Assessment not found");
       }
+
+      const user = await userRepo.findOneBy({ id: userId });
 
       const scores = [];
 
@@ -108,7 +114,7 @@ const AssessmentService = {
         }
 
         // Determine who is creating the score and validate accordingly
-        const isCreatedByUser = !createdBy || createdBy === userId;
+        // const isCreatedByUser = !createdBy || createdBy === userId;
         const scoreValue = skillAssessment.score;
 
         // Check if score already exists for AssessmentService assessment and skill
@@ -119,38 +125,41 @@ const AssessmentService = {
           },
         });
 
-        if (existingScore) {
-          // Update existing score
-          if (isCreatedByUser) {
-            existingScore.selfScore = scoreValue;
-          } else {
-            existingScore.leadScore = scoreValue;
-          }
-          scores.push(await scoreRepo.save(existingScore));
-        } else {
-          // Determine where to store the score based on who created it
-          let selfScore = null;
-          let leadScore = null;
+        // if (existingScore) {
+        //   // Update existing score
+        //   if (isCreatedByUser) {
+        //     existingScore.selfScore = scoreValue;
+        //   } else {
+        //     existingScore.leadScore = scoreValue;
+        //   }
+        //   scores.push(await scoreRepo.save(existingScore));
+        // } else {
+        // Determine where to store the score based on who created it
+        let selfScore = null;
+        let leadScore = null;
 
-          if (isCreatedByUser) {
-            // User is creating their own assessment
-            selfScore = scoreValue;
-            leadScore = null;
-          } else {
-            // Lead is creating assessment for the user
-            selfScore = null;
-            leadScore = scoreValue;
-          }
+        // if (isCreatedByUser) {
+        // User is creating their own assessment
+        if(!user.leadId){
+          selfScore = scoreValue;
+          leadScore = scoreValue;
+        } else{
+        selfScore = scoreValue;
+        leadScore = null;}
+        // } else {
+        //   // Lead is creating assessment for the user
+        //   selfScore = null;
+        //   leadScore = scoreValue;
+        // }
 
-          const score = scoreRepo.create({
-            assessmentId: assessmentId,
-            skillId: skillAssessment.skillId,
-            selfScore: selfScore,
-            leadScore: leadScore,
-          });
+        const score = scoreRepo.create({
+          assessmentId: assessmentId,
+          skillId: skillAssessment.skillId,
+          selfScore: selfScore,
+          leadScore: leadScore,
+        });
 
-          scores.push(await scoreRepo.save(score));
-        }
+        scores.push(await scoreRepo.save(score));
       }
 
       return scores;
@@ -246,7 +255,7 @@ const AssessmentService = {
       assessment.status = "Cancelled";
       await scoreRepo?.delete({ assessmentId: assessmentId });
       // Reset sequence for scores
-        await AppDataSource.query(`
+      await AppDataSource.query(`
           SELECT setval(
             pg_get_serial_sequence('scores', 'id'),
             (SELECT COALESCE(MAX(id), 0) FROM scores)
@@ -258,7 +267,6 @@ const AssessmentService = {
     }
   },
 
-
   reviewAssessment: async (assessmentId, reviewData, currentUserId) => {
     try {
       const assessment = await assessmentRequestRepo.findOne({
@@ -268,16 +276,16 @@ const AssessmentService = {
       if (!assessment) {
         throw new Error("Assessment not found");
       }
-      
+
       if (
         assessment.status !== "Pending" &&
         assessment.status !== "Forwarded"
       ) {
         throw new Error("Assessment is not in a reviewable state");
       }
-      
+
       const hrId = assessment.user.hrId;
-      
+
       if (currentUserId !== assessment.nextApprover) {
         throw new Error("You are not authorized to review this assessment");
       }
@@ -291,7 +299,7 @@ const AssessmentService = {
           });
 
           if (score) {
-            if (scoreUpdate.leadScore < 1 || scoreUpdate.leadScore > 4) {
+            if (scoreUpdate.score < 1 || scoreUpdate.score > 4) {
               throw new Error(`Invalid lead score. Must be between 1 and 4`);
             }
             score.leadScore = scoreUpdate.score;
@@ -307,19 +315,20 @@ const AssessmentService = {
         }
         assessment.status = "Forwarded";
       } else if (reviewData.status === "Approved") {
-        if(currentUserId !== hrId){
+        if (currentUserId !== hrId) {
           throw new Error("Only HR can approve assessments");
         }
         assessment.status = "Approved";
       } else {
         assessment.status = "Forwarded";
       }
-      const nextApproverId = await AssessmentService.getNextApprover(
-        assessment.nextApprover,
-        hrId
-      )
-      assessment.nextApprover = nextApproverId;
-      if(currentUserId === hrId){
+      // const nextApproverId = await AssessmentService.getNextApprover(
+      //   assessment.nextApprover,
+      //   hrId
+      // );
+      // assessment.nextApprover = nextApproverId;
+      assessment.nextApprover = hrId;
+      if (currentUserId === hrId) {
         assessment.nextApprover = null;
       }
       const reviewed = await assessmentRequestRepo.save(assessment);
@@ -334,32 +343,55 @@ const AssessmentService = {
     }
   },
 
-
   getUserLatestApprovedScores: async (userId) => {
     try {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
       const user = await userRepo.findOneBy({ id: userId });
       if (!user) {
         throw new Error("User not found");
       }
 
-      const latestScores = await AppDataSource.query(
-        `
-        SELECT DISTINCT ON (s.skill_id)
-          s.id,
-          s.self_score,
-          s.lead_score,
-          s.updated_at,
-          sk.name as skill_name,
-          sk.id as skill_id,
-          ar.requested_at
-        FROM scores s
-        JOIN assessment_requests ar ON s.assessment_id = ar.id
-        JOIN skills sk ON s.skill_id = sk.id
-        WHERE ar."userId" = $1 AND ar.status = 'Approved'
-        ORDER BY s.skill_id, ar.requested_at DESC
-      `,
-        [userId]
-      );
+      const approvedAssessments = await assessmentRequestRepo.find({
+        where: {
+          userId: userId,
+          status: "Approved",
+        },
+        order: { requestedAt: "DESC" },
+        relations: ["Score", "Score.Skill"],
+      });
+
+      if (!approvedAssessments || approvedAssessments.length === 0) {
+        return [];
+      }
+
+      // Create a map to store the latest score for each skill
+      const latestScoresMap = new Map();
+
+      for (const assessment of approvedAssessments) {
+        if (assessment.Score && assessment.Score.length > 0) {
+          for (const score of assessment.Score) {
+            const skillId = score.skillId;
+
+            // If we haven't seen this skill yet, or this assessment is newer
+            if (!latestScoresMap.has(skillId)) {
+              latestScoresMap.set(skillId, {
+                id: score.id,
+                self_score: score.selfScore,
+                lead_score: score.leadScore,
+                updated_at: score.updatedAt,
+                skill_name: score.Skill?.name,
+                skill_id: skillId,
+                requestedAt: assessment.requestedAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Convert map to array
+      const latestScores = Array.from(latestScoresMap.values());
 
       return latestScores;
     } catch (error) {
@@ -372,14 +404,13 @@ const AssessmentService = {
     try {
       const user = await userRepo.findOne({
         where: { id: id },
-        relations: ["role"],
       });
       if (!user) {
         throw new Error("User Not Found");
       }
 
       let nextApprover = user.leadId;
-      if(!nextApprover){
+      if (!nextApprover) {
         nextApprover = hrId;
       }
 
@@ -401,7 +432,6 @@ const AssessmentService = {
       // Filter assessments that should be reviewed by this reviewer
       const assessmentsForReviewer = [];
       for (const assessment of allPendingAssessments) {
-
         // If this reviewer is the next approver, include the assessment
         if (assessment.nextApprover === reviewerId) {
           const scores = await scoreRepo.find({

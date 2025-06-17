@@ -14,7 +14,7 @@ const skillRoutes = {
       {
         method: "GET",
         path: "/all-skills",
-        options: authorizeRoles([role.HR]),
+        options: authorizeRoles([role.HR, role.LEAD]),
         handler: SkillController.getAllSkills,
       },
       {

@@ -19,7 +19,7 @@ const AuthController = {
 
       const user = await userRepo.findOne({
         where: { email },
-        relations: ["role"],
+        relations: ["role","Team","position"],
       });
 
       if (!user || !auth.passwordHash) {
@@ -44,9 +44,9 @@ const AuthController = {
         },
         { key: process.env.JWT_SECRET_KEY, algorithm: "HS256" }
       );
-
-      return h.response({ token }).code(200);
+      return h.response({ token, user }).code(200);
     } catch (error) {
+      console.log(error);
       return h.response({ error: "Internal Server Error" }).code(500);
     }
   },

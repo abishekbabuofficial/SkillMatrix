@@ -7,6 +7,7 @@ import { Auth } from "../entities/Auth.js";
 import { AssessmentRequest } from "../entities/AssessmentRequest.js";
 import { Score } from "../entities/Score.js";
 import { Skill } from "../entities/Skill.js";
+import { position } from "../entities/Position.js";
 
 const userRepo = AppDataSource.getRepository(User);
 const roleRepo = AppDataSource.getRepository(Role);
@@ -21,10 +22,18 @@ const UserService = {
 
   // General user operations
   getUserById: async (id) => {
-    const user = await userRepo.findOne({
-      where: { id },
-      relations: ["role", "position", "Team"],
-    });
+   const user = await userRepo
+  .createQueryBuilder("user")
+  .leftJoinAndSelect("user.role", "role")
+  .leftJoinAndSelect("user.position", "position")
+  .leftJoinAndSelect("user.Team", "team")
+  .leftJoin("user.hrId", "hr")
+  .addSelect(["hr.name"])
+  .leftJoin("user.leadId", "lead")
+  .addSelect(["lead.name"])
+  .where("user.id = :id", { id })
+  .getOne();
+
     if (!user) throw new Error("User not found");
     return user;
   },
@@ -169,6 +178,19 @@ const UserService = {
     return await userRepo.remove(user);
   },
 
+  getTeamMembers: async (teamId) => {
+    try {
+      const members = await userRepo.find({
+        where: { teamId: teamId },
+        relations: ["role", "position", "Requests"],
+      });
+      return members;
+    } catch (error) {
+      console.error(`Error getting team members for team ${teamId}:`, error);
+      throw new Error(`Failed to get team members: ${error.message}`);
+    }
+  },
+
     getMostRecentApprovedScores: async (userId) => {
     try {
       // Get the most recent approved assessment for the user
@@ -264,6 +286,16 @@ const UserService = {
     } catch (error) {
       throw new Error(`Failed to get full skill matrix: ${error.message}`);
     }
+  },
+
+  getAllPositions: async () => {
+    return await positionRepo.find();
+  },
+  getAllRoles: async () => {
+    return await roleRepo.find();
+  },
+  getAllTeams: async () => {
+    return await teamRepo.find();
   },
 };
 
