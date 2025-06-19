@@ -50,6 +50,8 @@ const AssessmentService = {
         },
       });
 
+      const status = (user.hrId || user.leadId)? 'Pending':'Approved';
+
       let savedAssessment;
       if (existingAssessment) {
         throw new Error("User already has a pending assessment");
@@ -58,6 +60,7 @@ const AssessmentService = {
         // Create assessment request
         const assessment = assessmentRequestRepo.create({
           userId: userId,
+          status: status,
           nextApprover: user.leadId || user.hrId,
         });
         savedAssessment = await assessmentRequestRepo.save(assessment);
@@ -425,7 +428,7 @@ const AssessmentService = {
       // Get all pending and forwarded assessments
       const allPendingAssessments = await assessmentRequestRepo.find({
         where: { status: In(["Pending", "Forwarded"]) },
-        relations: ["user"],
+        relations: ["user","user.position","user.leadId","user.hrId","user.Team","user.role"],
         order: { requestedAt: "ASC" },
       });
 

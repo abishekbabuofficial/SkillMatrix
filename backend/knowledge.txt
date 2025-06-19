@@ -10,6 +10,23 @@
 // isInitiate for Hr
 // Do audit
 
+Pending in Frontend
+- Need to set Update for Upgrade Guide
+- Convert all the hook toast
+- Need to keep filter in team overview's top performers
+- Need to set up OAuth for 365 Authentication
+- Need to set Rejection for Hr
+- Need to implement protected Routes
+
+
+// Files ready
+- Skill matrix
+- Skill Criteria
+- Profile Page
+- Team Overview
+- User mgmt Modal
+- 
+
 
 Arul:
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Niwicm9sZSI6ImVtcGxveWVlIiwibmFtZSI6IkFydWwgTXVydWdhbiIsImlhdCI6MTc0ODkyMTY3N30.UkYMmeIKBzRM8pj9Mlp6YV3nhZgYNLATk56x4y9WxuQ

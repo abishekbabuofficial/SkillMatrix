@@ -152,28 +152,6 @@ const AssessmentController = {
     }
   },
 
-  // Get pending assessments (admin/lead only)
-  getPendingAssessments: async (req, h) => {
-    try {
-      const assessments = await AssessmentService.getPendingAssessments();
-
-      return h
-        .response({
-          success: true,
-          data: assessments,
-        })
-        .code(200);
-    } catch (error) {
-      console.error("Error getting pending assessments:", error);
-      return h
-        .response({
-          success: false,
-          error: "Failed to retrieve pending assessments",
-        })
-        .code(500);
-    }
-  },
-
   // Review an assessment (admin/lead only)
   reviewAssessment: async (req, h) => {
     try {

@@ -5254,5 +5254,6 @@ backend/node_modules/yargs-parser/build/lib/yargs-parser-types.js
 backend/node_modules/yargs-parser/build/lib/yargs-parser.js
 .vscode/settings.json
 backend/knowledge.txt
-frontend
 .gitignore
+backend/knowledge.txt
+backend/knowledge.txt
