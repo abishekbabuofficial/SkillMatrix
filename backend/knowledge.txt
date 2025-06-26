@@ -11,21 +11,19 @@
 // Do audit
 
 Pending in Frontend
-- Need to set Update for Upgrade Guide
+- Need to set Update for Upgrade Guide*
 - Convert all the hook toast
 - Need to keep filter in team overview's top performers
-- Need to set up OAuth for 365 Authentication
 - Need to set Rejection for Hr
 - Need to implement protected Routes
+- Sign up page error handling
+- Implement react portal for modal's z index issue
 
-
-// Files ready
-- Skill matrix
-- Skill Criteria
-- Profile Page
-- Team Overview
-- User mgmt Modal
-- 
+Pending
+- skillCreationModal
+- TL Dashboard
+- LoginForm
+- TooltipProvider
 
 
 Arul:

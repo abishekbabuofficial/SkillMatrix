@@ -47,6 +47,7 @@ export const Auth = new EntitySchema({
       referencedColumnName: "email"
     },
     onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   }
 }
 

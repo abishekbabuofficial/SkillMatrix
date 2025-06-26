@@ -6,10 +6,25 @@ const authRoutes = {
   register: async function (server, options) {
     server.route([
   {
-    method: 'POST',
+    method: '*',
     path: '/login',
-    options: { auth: false },
+    options: { auth: false,
+    handler: AuthController.microsoftLogin
+    },
+  },
+  {
+    method: 'GET',
+    path: '/start-login',
+    options: { auth: false,
+    handler: AuthController.startLogin
+    }
+  },
+  {
+    method: 'POST',
+    path: '/legacy-login',
+    options: { auth: false,
     handler: AuthController.login
+    },
   },
   {
     method: 'POST',
