@@ -1,7 +1,7 @@
 backend/.env
 backend/node_modules
-frontendd/node_modules
-frontendd/.env
+frontend/node_modules
+frontend/.env
 .vscode
 backend/node_modules/.package-lock.json
 backend/node_modules/.bin/bcrypt
