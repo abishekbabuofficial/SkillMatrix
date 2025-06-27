@@ -14,7 +14,6 @@ store.dispatch(loadStoredAuth());
 
 const App = () => (
   <Provider store={store}>
-      <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -23,7 +22,6 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
   </Provider>
 );
 
